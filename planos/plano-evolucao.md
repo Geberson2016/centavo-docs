@@ -12,11 +12,12 @@ Plano incremental para sair do estado atual e chegar na arquitetura-alvo (**Reac
 
 ## 📌 Status atual (atualizado em 2026-11-08)
 
-- **Concluídos:** C1–C15 (Fases 0 a 6; BFF: scaffold `e0481ef` e encaminhamento `fa9c8d7`). Fase 5: C9 `9ecb601` (backend) e C10 `402f34f` (frontend) (Fase 6, i18n e toasts de erro). Além do plano: seletor de idioma com persistência (`cd185c0`), fix do cadastro (`c3e3b8c`) e fix de segurança da categoria de outro usuário no lançamento (`731aac6`, backend).
-- **Próximo passo:** **C16 — login e sessão em cookie httpOnly no BFF** (par ⚠️ com o C17 no frontend).
+- **Concluídos:** C1–C17 (Fases 0 a 7). BFF: scaffold `e0481ef`, encaminhamento `fa9c8d7` e sessão `d865ee2`; frontend no BFF `fc0be69`. Fase 5: C9 `9ecb601` (backend) e C10 `402f34f` (frontend) (Fase 6, i18n e toasts de erro). Além do plano: seletor de idioma com persistência (`cd185c0`), fix do cadastro (`c3e3b8c`) e fix de segurança da categoria de outro usuário no lançamento (`731aac6`, backend).
+- **Próximo passo:** **C18 — testes do backend** (Fase 8). C18 a C21 podem ser feitos em qualquer ordem; C20 (CI) e C21 (compose versionado) esbarram na decisão de deixar infra para depois.
 - **BFF:** Fastify 5 + TS, em repositório próprio `centavo-bff` (decidido em 2026-11-08), porta 3000. Remoto: `Geberson2016/centavo-bff`. Rotas da UI em `/bff/*`, descritas no `openapi.yaml` do BFF (de onde o front vai gerar os tipos no C17).
-- **Pendentes:** C16–C17 (BFF), C18–C21 (testes, CI, infra).
-- **Pendência conhecida:** rota protegida sem token devolve 403 sem corpo (falta um `AuthenticationEntryPoint` → 401). Resolver junto com o C16/C17 (sessão), porque o interceptor do front reage a 401.
+- **Pendentes:** C18–C21 (testes, CI, infra).
+- **Pendência conhecida:** o Spring ainda devolve 403 sem corpo para token ausente ou inválido (falta um `AuthenticationEntryPoint` → 401). Para a UI isso já está resolvido: o BFF traduz para `401 UNAUTHENTICATED` e apaga o cookie. Corrigir no Spring é opcional.
+- **Rodar local:** Spring (`docker compose up -d` aqui), BFF (`npm run dev` no `centavo-bff`, `:3000`, precisa do `.env` com `SESSION_KEY`) e front (`npm run dev`, `:5173`, faz proxy de `/bff`).
 - **Ambiente local:** `docker compose up -d` em `~/Projects/Centavo` sobe Postgres (`localhost:5433`) e a API (`localhost:8090`); o front roda com `npm run dev` (`localhost:5173`, `.env.local` aponta para a `:8090`). Fora dos repos, sem versionamento.
 
 ---
@@ -127,15 +128,17 @@ Consumir o `openapi.yaml` (client gerado) e expor os endpoints/view-models que a
 - **Depende de:** C9
 - **Feito assim:** cópia do spec do Spring em `contracts/` + openapi-typescript/openapi-fetch; `openapi.yaml` próprio com só o que a UI usa; `GET /bff/dashboard` agrega 3 chamadas; erros do Spring passam intactos e Spring fora do ar vira `502 UPSTREAM_UNAVAILABLE` (código novo, que o front precisa traduzir no C17). O `Authorization` ainda é repassado até o C16.
 
-### [ ] C16 · [bff] Sessão em cookie httpOnly
+### [x] C16 · [bff] Sessão em cookie httpOnly
 Implementar login no BFF que troca credenciais pelo JWT do Spring e devolve uma **sessão em cookie httpOnly, Secure**; preparar fluxo de refresh.
 - **Commit:** `feat(bff): adiciona login e sessão em cookie httpOnly`
 - **Depende de:** C15
+- **Feito assim:** `@fastify/secure-session`, ou seja, cookie `centavo_session` cifrado com o JWT do Spring dentro, sem estado no servidor. `POST/GET/DELETE /bff/session`. A sessão expira junto com o JWT; 403 do Spring vira 401. CSRF: SameSite=Lax + só `application/json`. Refresh não existe, porque o Spring não tem endpoint para isso.
 
-### [ ] C17 · [frontend] Consumir o BFF e sair do localStorage
+### [x] C17 · [frontend] Consumir o BFF e sair do localStorage
 Apontar o client do front para o BFF (não mais o Spring direto), remover o token do `localStorage` e ajustar `utils/auth.ts` / interceptors para a sessão por cookie.
 - **Commit:** `refactor(auth): consome o BFF e move a sessão para cookie httpOnly`
 - **Depende de:** C16 (par coordenado com o BFF)
+- **Feito assim:** proxy do Vite para `/bff`, tipos gerados do `openapi.yaml` do BFF, `useSession`/`useLogin`/`useLogout`, `useDashboard` agregado. Validado num navegador headless: login, dashboard, reload, logout; o token não fica acessível ao JS.
 
 ---
 
