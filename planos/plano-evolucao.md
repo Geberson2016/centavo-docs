@@ -12,10 +12,10 @@ Plano incremental para sair do estado atual e chegar na arquitetura-alvo (**Reac
 
 ## 📌 Status atual (atualizado em 2026-11-08)
 
-- **Concluídos:** C1–C14 (Fases 0 a 6 e o scaffold do BFF). Fase 5: C9 `9ecb601` (backend) e C10 `402f34f` (frontend) (Fase 6, i18n e toasts de erro). Além do plano: seletor de idioma com persistência (`cd185c0`), fix do cadastro (`c3e3b8c`) e fix de segurança da categoria de outro usuário no lançamento (`731aac6`, backend).
-- **Próximo passo:** **C15 — BFF encaminhando o contrato do Spring** (client gerado do `centavo-backend/src/main/resources/openapi.yaml`).
-- **BFF:** Fastify 5 + TS, em repositório próprio `centavo-bff` (decidido em 2026-11-08), porta 3000. O commit do C14 (`chore(bff): …`) está local até o repositório `Geberson2016/centavo-bff` ser criado no GitHub.
-- **Pendentes:** C15–C17 (BFF), C18–C21 (testes, CI, infra).
+- **Concluídos:** C1–C15 (Fases 0 a 6; BFF: scaffold `e0481ef` e encaminhamento `fa9c8d7`). Fase 5: C9 `9ecb601` (backend) e C10 `402f34f` (frontend) (Fase 6, i18n e toasts de erro). Além do plano: seletor de idioma com persistência (`cd185c0`), fix do cadastro (`c3e3b8c`) e fix de segurança da categoria de outro usuário no lançamento (`731aac6`, backend).
+- **Próximo passo:** **C16 — login e sessão em cookie httpOnly no BFF** (par ⚠️ com o C17 no frontend).
+- **BFF:** Fastify 5 + TS, em repositório próprio `centavo-bff` (decidido em 2026-11-08), porta 3000. Remoto: `Geberson2016/centavo-bff`. Rotas da UI em `/bff/*`, descritas no `openapi.yaml` do BFF (de onde o front vai gerar os tipos no C17).
+- **Pendentes:** C16–C17 (BFF), C18–C21 (testes, CI, infra).
 - **Pendência conhecida:** rota protegida sem token devolve 403 sem corpo (falta um `AuthenticationEntryPoint` → 401). Resolver junto com o C16/C17 (sessão), porque o interceptor do front reage a 401.
 - **Ambiente local:** `docker compose up -d` em `~/Projects/Centavo` sobe Postgres (`localhost:5433`) e a API (`localhost:8090`); o front roda com `npm run dev` (`localhost:5173`, `.env.local` aponta para a `:8090`). Fora dos repos, sem versionamento.
 
@@ -121,10 +121,11 @@ Substituir os `alert()` por um sistema de toast/erro inline, mapeando os **códi
 Inicializar o serviço BFF (Fastify/NestJS/Hono, TS), com estrutura base, `healthcheck`, config por env e `.env.example`.
 - **Commit:** `chore(bff): inicializa o serviço BFF com healthcheck e configuração por env`
 
-### [ ] C15 · [bff] Encaminhar/agregar o contrato do Spring
+### [x] C15 · [bff] Encaminhar/agregar o contrato do Spring
 Consumir o `openapi.yaml` (client gerado) e expor os endpoints/view-models que a UI precisa, sem regra de negócio (só agregação/adaptação).
 - **Commit:** `feat(bff): encaminha e agrega o contrato do Spring para a UI`
 - **Depende de:** C9
+- **Feito assim:** cópia do spec do Spring em `contracts/` + openapi-typescript/openapi-fetch; `openapi.yaml` próprio com só o que a UI usa; `GET /bff/dashboard` agrega 3 chamadas; erros do Spring passam intactos e Spring fora do ar vira `502 UPSTREAM_UNAVAILABLE` (código novo, que o front precisa traduzir no C17). O `Authorization` ainda é repassado até o C16.
 
 ### [ ] C16 · [bff] Sessão em cookie httpOnly
 Implementar login no BFF que troca credenciais pelo JWT do Spring e devolve uma **sessão em cookie httpOnly, Secure**; preparar fluxo de refresh.
