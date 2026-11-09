@@ -12,9 +12,10 @@ Plano incremental para sair do estado atual e chegar na arquitetura-alvo (**Reac
 
 ## 📌 Status atual (atualizado em 2026-11-08)
 
-- **Concluídos:** C1–C13 (Fases 0 a 6). Fase 5: C9 `9ecb601` (backend) e C10 `402f34f` (frontend) (Fase 6, i18n e toasts de erro). Além do plano: seletor de idioma com persistência (`cd185c0`), fix do cadastro (`c3e3b8c`) e fix de segurança da categoria de outro usuário no lançamento (`731aac6`, backend).
-- **Próximo passo:** **C14 — scaffold do BFF**. Falta decidir o framework (Fastify, NestJS ou Hono) e onde o BFF mora: repositório novo ou pasta no `centavo-frontend`. O contrato fica em `centavo-backend/src/main/resources/openapi.yaml`.
-- **Pendentes:** C14–C17 (BFF), C18–C21 (testes, CI, infra).
+- **Concluídos:** C1–C14 (Fases 0 a 6 e o scaffold do BFF). Fase 5: C9 `9ecb601` (backend) e C10 `402f34f` (frontend) (Fase 6, i18n e toasts de erro). Além do plano: seletor de idioma com persistência (`cd185c0`), fix do cadastro (`c3e3b8c`) e fix de segurança da categoria de outro usuário no lançamento (`731aac6`, backend).
+- **Próximo passo:** **C15 — BFF encaminhando o contrato do Spring** (client gerado do `centavo-backend/src/main/resources/openapi.yaml`).
+- **BFF:** Fastify 5 + TS, em repositório próprio `centavo-bff` (decidido em 2026-11-08), porta 3000. O commit do C14 (`chore(bff): …`) está local até o repositório `Geberson2016/centavo-bff` ser criado no GitHub.
+- **Pendentes:** C15–C17 (BFF), C18–C21 (testes, CI, infra).
 - **Pendência conhecida:** rota protegida sem token devolve 403 sem corpo (falta um `AuthenticationEntryPoint` → 401). Resolver junto com o C16/C17 (sessão), porque o interceptor do front reage a 401.
 - **Ambiente local:** `docker compose up -d` em `~/Projects/Centavo` sobe Postgres (`localhost:5433`) e a API (`localhost:8090`); o front roda com `npm run dev` (`localhost:5173`, `.env.local` aponta para a `:8090`). Fora dos repos, sem versionamento.
 
@@ -116,7 +117,7 @@ Substituir os `alert()` por um sistema de toast/erro inline, mapeando os **códi
 
 ## Fase 7 — BFF (Node/TS)
 
-### [ ] C14 · [bff] Scaffold do serviço
+### [x] C14 · [bff] Scaffold do serviço
 Inicializar o serviço BFF (Fastify/NestJS/Hono, TS), com estrutura base, `healthcheck`, config por env e `.env.example`.
 - **Commit:** `chore(bff): inicializa o serviço BFF com healthcheck e configuração por env`
 
