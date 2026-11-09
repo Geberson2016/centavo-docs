@@ -10,11 +10,11 @@ Plano incremental para sair do estado atual e chegar na arquitetura-alvo (**Reac
 
 ---
 
-## 📌 Status atual (atualizado em 2026-11-03)
+## 📌 Status atual (atualizado em 2026-11-08)
 
-- **Concluídos:** C1–C8 (Fases 0 a 4, backend e frontend) e C11–C13 (Fase 6, i18n e toasts de erro). Além do plano: seletor de idioma com persistência (`cd185c0`) e fix do cadastro (`c3e3b8c`).
-- **Próximo passo:** **C9 — contrato OpenAPI no backend** (par coordenado ⚠️ com o C10 no frontend). Ele também destrava o BFF (C15).
-- **Pendentes:** C9–C10 (OpenAPI), C14–C17 (BFF), C18–C21 (testes, CI, infra).
+- **Concluídos:** C1–C8 (Fases 0 a 4, backend e frontend), C9 (`9ecb601`, contrato OpenAPI no backend) e C11–C13 (Fase 6, i18n e toasts de erro). Além do plano: seletor de idioma com persistência (`cd185c0`) e fix do cadastro (`c3e3b8c`).
+- **Próximo passo:** **C10 — client TypeScript gerado no frontend** (fecha o par ⚠️ com o C9). O spec fica em `centavo-backend/src/main/resources/openapi.yaml`. O C9 também destrava o BFF (C15).
+- **Pendentes:** C10 (OpenAPI), C14–C17 (BFF), C18–C21 (testes, CI, infra).
 - **Ambiente local:** `docker compose up -d` em `~/Projects/Centavo` sobe Postgres (`localhost:5433`) e a API (`localhost:8090`); o front roda com `npm run dev` (`localhost:5173`, `.env.local` aponta para a `:8090`). Fora dos repos, sem versionamento.
 
 ---
@@ -80,8 +80,9 @@ Trocar os union types `'RECEITA' | 'DESPESA'` por `'INCOME' | 'EXPENSE'` (ex.: `
 
 ## Fase 5 — Contract-first OpenAPI ⚠️ par coordenado
 
-### [ ] C9 · [backend] Contrato OpenAPI como fonte da verdade
-Criar `openapi.yaml` versionado descrevendo todos os endpoints atuais (`/api/v1/**`), com paths/schemas/`operationId` em inglês e descrições/summaries em português (`AGENTS.md §0`). Configurar o openapi-generator (`spring`, `interfaceOnly=true`) para gerar as interfaces e fazer os controllers implementá-las. (springdoc opcional para servir o Swagger UII a partir do mesmo contrato.)
+### [x] C9 · [backend] Contrato OpenAPI como fonte da verdade
+Criar `openapi.yaml` versionado descrevendo todos os endpoints atuais (`/api/v1/**`), com paths/schemas/`operationId` em inglês e descrições/summaries em português (`AGENTS.md §0`). Configurar o openapi-generator (`spring`, `interfaceOnly=true`) para gerar as interfaces e fazer os controllers implementá-las. (springdoc opcional para servir o Swagger UI a partir do mesmo contrato.)
+- **Feito assim:** os schemas foram mapeados (`schemaMappings`) para os records/enums existentes, sem gerar models; o `Problem` foi mapeado para o `ProblemDetail` do Spring. O springdoc ficou de fora.
 - **Commit:** `feat(api): adiciona contrato OpenAPI e gera interfaces do servidor`
 - **Depende de:** C7 (enums já em inglês no spec)
 
