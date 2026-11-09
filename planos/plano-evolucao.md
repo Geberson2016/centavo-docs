@@ -12,9 +12,10 @@ Plano incremental para sair do estado atual e chegar na arquitetura-alvo (**Reac
 
 ## 📌 Status atual (atualizado em 2026-11-08)
 
-- **Concluídos:** C1–C8 (Fases 0 a 4, backend e frontend), C9 (`9ecb601`, contrato OpenAPI no backend) e C11–C13 (Fase 6, i18n e toasts de erro). Além do plano: seletor de idioma com persistência (`cd185c0`) e fix do cadastro (`c3e3b8c`).
-- **Próximo passo:** **C10 — client TypeScript gerado no frontend** (fecha o par ⚠️ com o C9). O spec fica em `centavo-backend/src/main/resources/openapi.yaml`. O C9 também destrava o BFF (C15).
-- **Pendentes:** C10 (OpenAPI), C14–C17 (BFF), C18–C21 (testes, CI, infra).
+- **Concluídos:** C1–C13 (Fases 0 a 6). Fase 5: C9 `9ecb601` (backend) e C10 `402f34f` (frontend) (Fase 6, i18n e toasts de erro). Além do plano: seletor de idioma com persistência (`cd185c0`), fix do cadastro (`c3e3b8c`) e fix de segurança da categoria de outro usuário no lançamento (`731aac6`, backend).
+- **Próximo passo:** **C14 — scaffold do BFF**. Falta decidir o framework (Fastify, NestJS ou Hono) e onde o BFF mora: repositório novo ou pasta no `centavo-frontend`. O contrato fica em `centavo-backend/src/main/resources/openapi.yaml`.
+- **Pendentes:** C14–C17 (BFF), C18–C21 (testes, CI, infra).
+- **Pendência conhecida:** rota protegida sem token devolve 403 sem corpo (falta um `AuthenticationEntryPoint` → 401). Resolver junto com o C16/C17 (sessão), porque o interceptor do front reage a 401.
 - **Ambiente local:** `docker compose up -d` em `~/Projects/Centavo` sobe Postgres (`localhost:5433`) e a API (`localhost:8090`); o front roda com `npm run dev` (`localhost:5173`, `.env.local` aponta para a `:8090`). Fora dos repos, sem versionamento.
 
 ---
@@ -86,10 +87,11 @@ Criar `openapi.yaml` versionado descrevendo todos os endpoints atuais (`/api/v1/
 - **Commit:** `feat(api): adiciona contrato OpenAPI e gera interfaces do servidor`
 - **Depende de:** C7 (enums já em inglês no spec)
 
-### [ ] C10 · [frontend] Gerar client TypeScript do spec
+### [x] C10 · [frontend] Gerar client TypeScript do spec
 Gerar tipos/client a partir do `openapi.yaml` (`openapi-typescript` ou `openapi-generator typescript-fetch`), adicionar o script de geração ao `package.json` e substituir as interfaces escritas à mão nos hooks pelos tipos gerados.
 - **Commit:** `feat(api): gera client TypeScript a partir do openapi.yaml`
 - **Depende de:** C9
+- **Feito assim:** `openapi-typescript` → `src/api/schema.ts`, versionado, com aliases em `src/api/types.ts`; scripts `api:generate` e `api:check`. O axios ficou, porque os interceptors de auth saem só no C17. Usa `overrides` porque o gerador declara peer TS 5 e o projeto está no TS 6.
 
 ---
 
