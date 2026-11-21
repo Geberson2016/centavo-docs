@@ -15,6 +15,7 @@ Plano incremental para sair do estado atual e chegar na arquitetura-alvo (**Reac
 - **Plano concluído:** C1–C21 (Fases 0 a 8). Fase 8: testes do backend `aa5e929` (com o fix do filtro JWT `f71c37d`), testes do frontend `998c75a`, CI nos três repositórios e o stack em Docker no novo repositório `centavo-infra`. Antes, BFF: scaffold `e0481ef`, encaminhamento `fa9c8d7` e sessão `d865ee2`; frontend no BFF `fc0be69`.
 - **Repositórios:** `centavo-backend`, `centavo-bff`, `centavo-frontend`, `centavo-infra` (compose do stack) e `centavo-docs` (este), todos lado a lado em `~/Projects/Centavo`.
 - **Rodar local:** em `centavo-infra`, `cp .env.example .env` (preencher) e `docker compose up -d --build --wait`. UI em `http://localhost:4173` (nginx com proxy de `/bff`), BFF `:3000`, API `:8090`, Postgres no host em `POSTGRES_PORT` (padrão `5433`). Para hot reload: `docker compose up -d postgres backend` e `npm run dev` no BFF e no front (`:5173`).
+- **Fluxo de trabalho:** desde 2026-11-21 nada entra direto na `main`: issue → branch → PR, com merge feito pelo Geberson. Ver [`processo/fluxo-de-trabalho.md`](../processo/fluxo-de-trabalho.md).
 - **CI:** GitHub Actions em cada repositório, no push para `main` e em PR. Front e BFF têm também um job `contract`, que baixa o repositório vizinho e falha se os tipos gerados ou a cópia do contrato ficaram para trás.
 - **Pendências conhecidas (fora do plano):**
   - O Spring devolve 403 sem corpo para token ausente ou inválido. O BFF já traduz para `401 UNAUTHENTICATED`; mudar no Spring exige mudar o BFF junto.
