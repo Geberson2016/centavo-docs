@@ -10,15 +10,16 @@ Plano incremental para sair do estado atual e chegar na arquitetura-alvo (**Reac
 
 ---
 
-## 📌 Status atual (atualizado em 2026-11-08)
+## 📌 Status atual (atualizado em 2026-11-21)
 
-- **Concluídos:** C1–C17 (Fases 0 a 7). BFF: scaffold `e0481ef`, encaminhamento `fa9c8d7` e sessão `d865ee2`; frontend no BFF `fc0be69`. Fase 5: C9 `9ecb601` (backend) e C10 `402f34f` (frontend) (Fase 6, i18n e toasts de erro). Além do plano: seletor de idioma com persistência (`cd185c0`), fix do cadastro (`c3e3b8c`) e fix de segurança da categoria de outro usuário no lançamento (`731aac6`, backend).
-- **Próximo passo:** **C18 — testes do backend** (Fase 8). C18 a C21 podem ser feitos em qualquer ordem; C20 (CI) e C21 (compose versionado) esbarram na decisão de deixar infra para depois.
-- **BFF:** Fastify 5 + TS, em repositório próprio `centavo-bff` (decidido em 2026-11-08), porta 3000. Remoto: `Geberson2016/centavo-bff`. Rotas da UI em `/bff/*`, descritas no `openapi.yaml` do BFF (de onde o front vai gerar os tipos no C17).
-- **Pendentes:** C18–C21 (testes, CI, infra).
-- **Pendência conhecida:** o Spring ainda devolve 403 sem corpo para token ausente ou inválido (falta um `AuthenticationEntryPoint` → 401). Para a UI isso já está resolvido: o BFF traduz para `401 UNAUTHENTICATED` e apaga o cookie. Corrigir no Spring é opcional.
-- **Rodar local:** Spring (`docker compose up -d` aqui), BFF (`npm run dev` no `centavo-bff`, `:3000`, precisa do `.env` com `SESSION_KEY`) e front (`npm run dev`, `:5173`, faz proxy de `/bff`).
-- **Ambiente local:** `docker compose up -d` em `~/Projects/Centavo` sobe Postgres (`localhost:5433`) e a API (`localhost:8090`); o front roda com `npm run dev` (`localhost:5173`, `.env.local` aponta para a `:8090`). Fora dos repos, sem versionamento.
+- **Plano concluído:** C1–C21 (Fases 0 a 8). Fase 8: testes do backend `aa5e929` (com o fix do filtro JWT `f71c37d`), testes do frontend `998c75a`, CI nos três repositórios e o stack em Docker no novo repositório `centavo-infra`. Antes, BFF: scaffold `e0481ef`, encaminhamento `fa9c8d7` e sessão `d865ee2`; frontend no BFF `fc0be69`.
+- **Repositórios:** `centavo-backend`, `centavo-bff`, `centavo-frontend`, `centavo-infra` (compose do stack) e `centavo-docs` (este), todos lado a lado em `~/Projects/Centavo`.
+- **Rodar local:** em `centavo-infra`, `cp .env.example .env` (preencher) e `docker compose up -d --build --wait`. UI em `http://localhost:4173` (nginx com proxy de `/bff`), BFF `:3000`, API `:8090`, Postgres no host em `POSTGRES_PORT` (padrão `5433`). Para hot reload: `docker compose up -d postgres backend` e `npm run dev` no BFF e no front (`:5173`).
+- **CI:** GitHub Actions em cada repositório, no push para `main` e em PR. Front e BFF têm também um job `contract`, que baixa o repositório vizinho e falha se os tipos gerados ou a cópia do contrato ficaram para trás.
+- **Pendências conhecidas (fora do plano):**
+  - O Spring devolve 403 sem corpo para token ausente ou inválido. O BFF já traduz para `401 UNAUTHENTICATED`; mudar no Spring exige mudar o BFF junto.
+  - Logout sem estado: apagar o cookie não revoga uma cópia dele até o JWT expirar (1 dia).
+  - Ideias do roadmap ainda não feitas: smoke E2E com Playwright, Dependabot, actuator e logs estruturados, Spotless/Checkstyle no backend.
 
 ---
 
@@ -144,21 +145,25 @@ Apontar o client do front para o BFF (não mais o Spring direto), remover o toke
 
 ## Fase 8 — Testes, CI e infra
 
-### [ ] C18 · [backend] Testes
+### [x] C18 · [backend] Testes
 JUnit 5 + Mockito para services e `@WebMvcTest` para controllers; Testcontainers (Postgres) para repositórios/integração.
 - **Commit:** `test(backend): adiciona testes de service, controller e integração`
+- **Feito assim:** 68 testes. Services com Mockito; controllers com `@WebMvcTest` e o `SecurityConfig` real; repositories com `@DataJpaTest` contra Postgres do Testcontainers (schema das migrações validado pelo Hibernate); `ApiIntegrationTest` ponta a ponta, incluindo o isolamento entre usuários. Os testes revelaram que token inválido fazia a exceção escapar do filtro JWT (`f71c37d`).
 
-### [ ] C19 · [frontend] Testes
+### [x] C19 · [frontend] Testes
 Vitest + React Testing Library para hooks e componentes; smoke E2E (Playwright) opcional (login → dashboard).
 - **Commit:** `test(frontend): adiciona Vitest e testes de componente`
+- **Feito assim:** 41 testes com Vitest + React Testing Library e o BFF simulado pelo MSW (chamada sem handler falha o teste). Cobre o interceptor do axios, `useSession`, `PrivateRoute`, Login, Dashboard, a tabela de lançamentos e a paridade dos bundles pt-BR/en. O E2E com Playwright ficou de fora (era opcional).
 
-### [ ] C20 · [ci] Pipeline
+### [x] C20 · [ci] Pipeline
 GitHub Actions rodando lint + typecheck + build + test para backend, frontend e BFF nos PRs.
 - **Commit:** `ci: adiciona pipeline de lint, build e testes`
+- **Feito assim:** um workflow `ci.yml` por repositório. Backend: `./mvnw verify` (com Testcontainers). BFF: typecheck, lint, test, build. Front: lint, test, build. Front e BFF ganharam o job `contract` (`npm run api:check` com o repositório vizinho ao lado).
 
-### [ ] C21 · [infra] Docker Compose do stack
+### [x] C21 · [infra] Docker Compose do stack
 `docker-compose` com postgres + backend + bff + web para dev local com um comando; `Dockerfile` por serviço.
 - **Commit:** `chore(infra): adiciona docker-compose com postgres, backend, bff e web`
+- **Feito assim:** `Dockerfile` multi-stage em cada repositório (JRE só com o jar; Node só com o `dist/` e as dependências de produção; nginx servindo o build do Vite com proxy de `/bff`). O compose fica no repositório novo `centavo-infra`, com healthchecks em cadeia e portas presas a `127.0.0.1`. Para a imagem funcionar a partir de um clone limpo, o `application.properties` do backend passou a ser versionado (só tem `${VAR}`).
 
 ---
 
